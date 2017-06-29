@@ -7,8 +7,7 @@
     $.verticalScroll = function (element, options) {
         var defaults = {
             list: [], //滚动内容
-            speed: 2000, //滚动速度
-            placement: 'scroll' //触摸滑动元素 'belt'(两边的滑动皮带),'scroll'(最左边的滑轮),'content'(中间的内容)
+            speed: 2000 //滚动速度
         };
 
         var vs = this;
@@ -19,73 +18,64 @@
 
         vs.init = function () {
             vs.settings = $.extend({}, defaults, options);
-            $element.append('<div class="content"><span class="broder-scroll left">' +
-                '<img src="src/image/border-scroll-left.png" /><img src="src/image/border-scroll-left.png" /><img src="src/image/border-scroll-left.png" />' +
-                '</span><ul class="template">' +
-                '<li></li><li class="current"></li><li></li></ul><ul class="items"></ul><span class="broder-scroll right">' +
-                '<img src="src/image/border-scroll-right.png" /><img src="src/image/border-scroll-right.png" /><img src="src/image/border-scroll-right.png" /></span></div>' +
-                '<div class="operate">' +
-                '<span class="up"> <img src="src/image/up.png" /></span>' +
-                '<a class="scroll" id="scroll"><div class="cyc-scroll">' +
-                '<img src="src/image/scroll.png" /><img src="src/image/scroll.png" /><img src="src/image/scroll.png" /></div></a>' +
-                '<span class="down"><img src="src/image/down.png" /></span>' +
-                '</div>');
+            $element.append('<div class="broder-scroll left">' +
+                            '<span class="angle top"></span>' +
+                            '<div class="belt-relative"><div class="belt"><span></span><span></span><span></span></div></div>' +
+                            '<span class="angle bottom"></span></div>' +
+                            '<div class="content"><img src="src/image/B1.jpg"/>' +
+                            '<ul class="items"></ul></div><div class="broder-scroll right"><span class="angle top"></span>' +
+                            '<div class="belt-relative"><div class="belt"><span></span><span></span><span></span></div></div><span class="angle bottom"></span></div>');
             var ulElement = "";
             for (var i = 0; i < vs.settings.list.length; i++) {
                 ulElement = ulElement + "<li>" + vs.settings.list[i] + "</i>";
             }
             $element.find(".items").append(ulElement);
             $element.find(".items li:eq(1)").addClass("current");
-
-            function regroupli(ul, isUp) {
-                var $ul = $(ul);
-                $ul.find("li").removeClass("current");
-                if (isUp == true) {
-                    $ul.append($(ul).find('li:first'));
-                } else {
-                    $ul.prepend($(ul).find('li:last'));
-                }
-                $element.find(".items li:eq(1)").addClass("current");
-            }
+            $element.find(".items").prepend($element.find(".items").find('li:last'));
 
             function up(interval) {
-                $(".broder-scroll,.cyc-scroll").animate({ "top": '-200%' }, interval, "linear", function () {
-                    $(".broder-scroll,.cyc-scroll").css("top", '-100%');
+                var $ul = $("#verticalScroll .items");
+                $ul.append($ul.find('li:first'));
+                $ul.find('.current').css({ 'font-size': "1.5rem" });
+                $(".broder-scroll,.belt").animate({ "top": '-200%' }, interval, "linear", function () {
+                    $(".broder-scroll,.belt").css("top", '-100%');
                 });
-                $element.find(".items").animate({ "top": '-35%' }, interval, "linear", function () {
-                    $("#verticalScroll .items").css("top", '0');
-                    regroupli($element.find(".items"), true);
+                $element.find(".items").animate({ "top": '-65%' }, interval, "linear", function () {
+                    $(this).css({ "top": '-30%' });
+                    $ul.find("li").removeClass("current");
+                    $element.find(".items li:eq(2)").addClass("current");
+                    $ul.find('.current').css({ 'font-size': "3rem" });
                 });
             }
 
             function down(interval) {
-                if ($(".broder-scroll.left img").length <3) {
-                    $(".broder-scroll.left img:first").before($(".broder-scroll.left img:first").clone());
-                    $(".broder-scroll.right img:first").before($(".broder-scroll.right img:first").clone());
-                }
-                $(".broder-scroll,.cyc-scroll").animate({ "top": '0' }, interval, "linear", function () {
-                    $(".broder-scroll,.cyc-scroll").css("top", '-100%');
+                var $ul = $("#verticalScroll .items");
+                $ul.prepend($ul.find('li:last'));
+                $ul.find('.current').css({ 'font-size': "1.5rem" });
+                $(".broder-scroll,.belt").animate({ "top": '0' }, interval, "linear", function () {
+                    $(".broder-scroll,.belt").css("top", '-100%');
                 });
 
-                $element.find(".items").animate({ "top": '35%' }, interval, "linear", function () {
-                    $("#verticalScroll .items").css("top", '0');
-                    regroupli($element.find(".items"), false);
+                $element.find(".items").animate({ "top": '5%' }, interval, "linear", function () {
+                    $("#verticalScroll .items").css({ "top": '-30%' });
+                    $ul.find("li").removeClass("current");
+                    $element.find(".items li:eq(2)").addClass("current");
+                    $ul.find('.current').css({ 'font-size': "3rem" });
                 });
             }
 
-            var startY,
-                y; //滑动的距离
+            var startY, y;
             var once = true;
-            function touchSatrt(e) {//触摸 
+            function touchSatrt(e) {
                 e.preventDefault();
                 var touch = e.touches[0];
-                startY = touch.pageY; //刚触摸时的坐标 
+                startY = touch.pageY;
             }
 
-            function touchMove(e) {//滑动 
+            function touchMove(e) {
                 e.preventDefault();
                 var touch = e.touches[0];
-                y = touch.pageY - startY;//滑动的距离 
+                y = touch.pageY - startY;
                 if (once == true) {
                     if (y > 0) {
                         down(vs.settings.speed);
@@ -96,37 +86,14 @@
                 }
             }
 
-            function touchEnd(e) {//手指离开屏幕 
+            function touchEnd(e) {
                 once = true;
                 e.preventDefault();
             }
 
-            function getTouchElement() {
-                if (vs.settings.placement === 'content') {
-                    return $("#verticalScroll .items");
-                }else if (vs.settings.placement === 'belt') {
-                    return $("#verticalScroll .broder-scroll");
-                } else {
-                    return $("#scroll");
-                }
-            }
-
-            var touchElement = getTouchElement();
-            $(touchElement).each(function() {
-                $(this)[0].addEventListener('touchstart', touchSatrt, false);
-                $(this)[0].addEventListener('touchmove', touchMove, false);
-                $(this)[0].addEventListener('touchend', touchEnd, false);
-            });
-            //document.getElementById("scroll").addEventListener('touchstart', touchSatrt, false);
-            //document.getElementById("scroll").addEventListener('touchmove', touchMove, false);
-            //document.getElementById("scroll").addEventListener('touchend', touchEnd, false);
-
-            $(".roll .operate .down").on("click", function () {
-                down(vs.settings.speed);
-            });
-            $(".roll .operate .up").on("click", function () {
-                up(vs.settings.speed);
-            });
+            $("#verticalScroll .content")[0].addEventListener('touchstart', touchSatrt, false);
+            $("#verticalScroll .content")[0].addEventListener('touchmove', touchMove, false);
+            $("#verticalScroll .content")[0].addEventListener('touchend', touchEnd, false);
         };
 
         vs.init();
@@ -140,7 +107,6 @@
                 $(this).data('verticalScroll', vs);
             }
         });
-
     };
 
 })(jQuery);
